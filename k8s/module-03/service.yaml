@@ -1,0 +1,13 @@
+# Leçon 3.5 : un Service ClusterIP devant les pods de l'API
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-catalogue
+  labels:
+    app: api-catalogue
+spec:
+  selector:
+    app: api-catalogue
+  ports:
+    - port: 80
+      targetPort: 8080
