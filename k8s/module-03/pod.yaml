@@ -1,0 +1,13 @@
+# Leçon 3.1 : notre premier pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mon-nginx
+  labels:
+    app: mon-nginx
+spec:
+  containers:
+    - name: nginx
+      image: nginx:1.27
+      ports:
+        - containerPort: 80

@@ -1,0 +1,14 @@
+# Leçon 3.5 : un Service LoadBalancer temporaire (payant : à supprimer après le test)
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-catalogue-externe
+  labels:
+    app: api-catalogue
+spec:
+  type: LoadBalancer
+  selector:
+    app: api-catalogue
+  ports:
+    - port: 80
+      targetPort: 8080
