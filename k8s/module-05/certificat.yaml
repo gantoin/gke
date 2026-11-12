@@ -1,0 +1,12 @@
+# Leçon 5.3 : un certificat HTTPS géré par Google (il faut un vrai nom de domaine)
+# Remplacez boutique.exemple.fr par votre domaine, pointé vers l'adresse de l'Ingress.
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: boutique
+  namespace: boutique
+spec:
+  domains:
+    - boutique.exemple.fr
+# Puis, dans les annotations de l'Ingress :
+#   networking.gke.io/managed-certificates: boutique

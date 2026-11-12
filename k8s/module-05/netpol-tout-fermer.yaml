@@ -1,0 +1,11 @@
+# Leçon 5.5 : le point de départ recommandé. Tout fermer dans le namespace,
+# puis ouvrir ce qui est nécessaire avec d'autres règles.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tout-fermer
+  namespace: boutique
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress

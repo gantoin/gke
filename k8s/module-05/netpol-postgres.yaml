@@ -1,0 +1,20 @@
+# Leçon 5.5 : seule l'API catalogue a le droit de parler à PostgreSQL
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-seulement-api
+  namespace: boutique
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api-catalogue
+      ports:
+        - protocol: TCP
+          port: 5432

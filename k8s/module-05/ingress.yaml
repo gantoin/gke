@@ -1,0 +1,24 @@
+# Leçon 5.3 : une seule porte d'entrée pour deux services
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: boutique
+  namespace: boutique
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-catalogue
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vitrine
+                port:
+                  number: 80

@@ -1,0 +1,45 @@
+# Leçon 5.3 : une deuxième application, pour avoir deux services à router
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vitrine
+  namespace: boutique
+  labels:
+    app: vitrine
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vitrine
+  template:
+    metadata:
+      labels:
+        app: vitrine
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vitrine
+  namespace: boutique
+spec:
+  selector:
+    app: vitrine
+  ports:
+    - port: 80
+      targetPort: 80

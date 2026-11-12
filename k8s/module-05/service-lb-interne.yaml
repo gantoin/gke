@@ -1,0 +1,15 @@
+# Leçon 5.2 : le même, mais visible seulement depuis votre réseau privé
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-catalogue-interne
+  namespace: boutique
+  annotations:
+    networking.gke.io/load-balancer-type: "Internal"
+spec:
+  type: LoadBalancer
+  selector:
+    app: api-catalogue
+  ports:
+    - port: 80
+      targetPort: 8080
