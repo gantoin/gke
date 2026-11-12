@@ -9,6 +9,7 @@ Code source du cours Udemy « Maîtriser Google Kubernetes Engine (GKE) ».
 | `app/api-catalogue` | L'API catalogue du projet fil rouge : Spring Boot 3, Java 21, avec son Dockerfile |
 | `k8s/module-03` | Les manifestes des leçons du module 3 (pod, Deployment, Services) |
 | `k8s/api-catalogue` | Le déploiement complet de l'API catalogue (namespace, Deployment, Service) |
+| `scripts` | Des scripts de démonstration utilisés dans les leçons |
 
 ## Avant de commencer
 
@@ -44,4 +45,16 @@ Construire une version v2 (seule la valeur renvoyée par `/api/info` change) :
 
 ```
 docker build --build-arg APP_VERSION=v2 -t api-catalogue:v2 .
+```
+
+## Autoriser le cluster à télécharger les images
+
+Sur un projet récent, les machines du cluster n'ont pas le droit de lire Artifact Registry. Les pods restent alors en `ImagePullBackOff`. Donnez le rôle de lecture au compte de service par défaut, sur le dépôt d'images :
+
+```
+PN=$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')
+gcloud artifacts repositories add-iam-policy-binding formation-images \
+  --location=europe-west1 \
+  --member="serviceAccount:$PN-compute@developer.gserviceaccount.com" \
+  --role="roles/artifactregistry.reader"
 ```
