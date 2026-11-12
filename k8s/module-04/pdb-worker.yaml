@@ -1,0 +1,10 @@
+# Leçon 4.4 : au moins 2 workers doivent toujours rester en service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: worker
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: worker

@@ -1,0 +1,37 @@
+# Leçon 4.3 : un worker de test, placé sur les machines Spot
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app: worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      # Le duo : on vise les machines Spot, et on a le laissez-passer
+      nodeSelector:
+        cloud.google.com/gke-spot: "true"
+      tolerations:
+        - key: cloud.google.com/gke-spot
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      # Une machine Spot est reprise avec 30 secondes de préavis
+      terminationGracePeriodSeconds: 25
+      containers:
+        - name: worker
+          image: busybox:1.36
+          command: ["sh", "-c", "i=0; while true; do i=$((i+1)); echo \"message $i traité\"; sleep 5; done"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              memory: 64Mi
