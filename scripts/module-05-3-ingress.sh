@@ -8,7 +8,7 @@ echo "== On attend que le load balancer soit prêt (plusieurs minutes)"
 S=$(date +%s)
 for i in $(seq 1 90); do
   IP=$(kubectl get ingress boutique -n boutique -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  if [ -n "$IP" ] && [ "$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://$IP/api/info)" = "200" ]; then break; fi
+  if [ -n "$IP" ] && [ "$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://$IP/api/info)" = "200" ] && [ "$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://$IP/)" = "200" ]; then break; fi
   sleep 10
 done
 echo "Prêt au bout de $(( $(date +%s) - S )) secondes"
