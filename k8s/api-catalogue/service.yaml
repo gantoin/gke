@@ -5,6 +5,9 @@ metadata:
   namespace: boutique
   labels:
     app: api-catalogue
+  annotations:
+    # Permet à un Ingress d'envoyer le trafic directement aux pods (module 5)
+    cloud.google.com/neg: '{"ingress": true}'
 spec:
   selector:
     app: api-catalogue

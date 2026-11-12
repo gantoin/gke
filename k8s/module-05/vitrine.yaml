@@ -37,6 +37,9 @@ kind: Service
 metadata:
   name: vitrine
   namespace: boutique
+  annotations:
+    # Permet à un Ingress d'envoyer le trafic directement aux pods
+    cloud.google.com/neg: '{"ingress": true}'
 spec:
   selector:
     app: vitrine
