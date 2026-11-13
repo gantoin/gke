@@ -71,8 +71,8 @@ pannes)
     echo "== panne-$n : les événements"
     kubectl get events -n boutique --field-selector involvedObject.name=panne-$n --sort-by=.lastTimestamp -o custom-columns='TYPE:.type,RAISON:.reason,MESSAGE:.message' | tail -3 | cut -c1-230
   done
-  echo "== panne-2 : les logs du conteneur précédent"
-  kubectl logs panne-2 -n boutique --previous
+  echo "== panne-2 : les logs (avec --previous : ceux du conteneur d'avant, quand ils sont encore là)"
+  kubectl logs panne-2 -n boutique --previous 2>/dev/null || kubectl logs panne-2 -n boutique
   echo "== panne-3 : le dernier arrêt du conteneur"
   kubectl get pod panne-3 -n boutique -o jsonpath='{.status.containerStatuses[0].lastState.terminated.reason}{"  code de sortie : "}{.status.containerStatuses[0].lastState.terminated.exitCode}{"\n"}'
   echo "== Un conteneur d'enquête, ajouté à un pod de l'API"
