@@ -54,7 +54,9 @@ prometheus)
   pkill -f "port-forward $POD" 2>/dev/null
   echo "== On demande à Prometheus managé de venir les lire"
   kubectl apply -f $K/podmonitoring.yaml
+  ouvrir
   for i in $(seq 1 30); do curl -s -o /dev/null localhost:8080/api/produits 2>/dev/null; sleep 6; done
+  pkill -f "port-forward service/api-catalogue" 2>/dev/null
   kubectl get podmonitoring -n boutique
   echo "== Une requête PromQL : les demandes reçues, par adresse et par code de réponse"
   promql 'sum by (uri, status) (http_server_requests_seconds_count{namespace="boutique"})'; echo
@@ -85,7 +87,8 @@ menage)
   gcloud logging metrics delete boutique-erreurs -q
   for d in $(gcloud monitoring dashboards list --filter="displayName=Boutique" --format="value(name)"); do gcloud monitoring dashboards delete $d -q; done
   T=$(gcloud auth print-access-token)
-  for a in $(curl -s -H "Authorization: Bearer $T" "https://monitoring.googleapis.com/v3/projects/$P/alertPolicies" | grep -B0 '"name": "projects/.*/alertPolicies/[0-9]*"$\|"name": "projects/.*/alertPolicies/[0-9]*",$' | sed 's/.*"\(projects[^"]*\)".*/\1/'); do curl -s -X DELETE -H "Authorization: Bearer $T" "https://monitoring.googleapis.com/v3/$a"; echo " alerte supprimée : $a"; done
+  # On ne supprime que l'alerte créée par ce module
+  for a in $(curl -s -G -H "Authorization: Bearer $T" "https://monitoring.googleapis.com/v3/projects/$P/alertPolicies" --data-urlencode 'filter=display_name="Boutique : un conteneur redémarre trop souvent"' | grep -o 'projects/[^"]*/alertPolicies/[0-9]*"' | tr -d '"' | sort -u); do curl -s -X DELETE -H "Authorization: Bearer $T" "https://monitoring.googleapis.com/v3/$a"; echo " alerte supprimée : $a"; done
   kubectl delete deployment api-catalogue -n boutique --ignore-not-found
   sed "s/PROJECT_ID/$P/" k8s/api-catalogue/deployment.yaml | kubectl apply -f -
   kubectl scale deployment api-catalogue -n boutique --replicas=0
