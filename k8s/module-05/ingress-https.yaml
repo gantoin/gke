@@ -1,0 +1,37 @@
+# Leçon 5.6 : l'Ingress avec un vrai nom de domaine et un certificat géré par Google
+# Remplacez DOMAINE par votre domaine (le script de la leçon le fait pour vous).
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: boutique
+  namespace: boutique
+spec:
+  domains:
+    - boutique.DOMAINE
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: boutique
+  namespace: boutique
+  annotations:
+    networking.gke.io/managed-certificates: boutique
+spec:
+  rules:
+    - host: boutique.DOMAINE
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-catalogue
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vitrine
+                port:
+                  number: 80
