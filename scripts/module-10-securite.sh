@@ -40,10 +40,10 @@ rbac)
   kubectl get pods -n boutique $LEA
   ;;
 images)
-  echo "== Les images de l'API, avec leur empreinte"
-  gcloud artifacts docker images list europe-west1-docker.pkg.dev/$P/formation-images/api-catalogue --include-tags --format="table(tags,version,createTime.date('%Y-%m-%d'))" 2>/dev/null
+  echo "== Les images de l'API : un tag, et une empreinte"
+  gcloud artifacts docker tags list europe-west1-docker.pkg.dev/$P/formation-images/api-catalogue --format="value(tag.basename(),version.basename())" 2>/dev/null | sort | cut -c1-32
   echo "== L'image utilisée par les pods"
-  kubectl get pods -n boutique -l app=api-catalogue -o jsonpath='{.items[0].status.containerStatuses[0].imageID}{"\n"}'
+  kubectl get pods -n boutique -l app=api-catalogue -o jsonpath='{.items[0].status.containerStatuses[0].imageID}{"\n"}' | sed 's/.*api-catalogue@/api-catalogue@/' | cut -c1-46
   ;;
 reseau)
   kubectl apply -f $K/network-policies.yaml
@@ -86,12 +86,12 @@ armor)
   fi
   ;;
 audit)
-  echo "== Qui a supprimé quoi, dans le cluster ?"
-  gcloud logging read "logName=\"projects/$P/logs/cloudaudit.googleapis.com%2Factivity\" AND resource.type=\"k8s_cluster\" AND protoPayload.methodName:\"delete\" AND protoPayload.resourceName:\"namespaces/boutique\"" --freshness=3h --limit=6 \
-    --format="table(timestamp.date('%H:%M:%S'),protoPayload.authenticationInfo.principalEmail,protoPayload.methodName,protoPayload.resourceName.slice(0:70),protoPayload.status.code)"
+  L="logName=\"projects/$P/logs/cloudaudit.googleapis.com%2Factivity\" AND resource.type=\"k8s_cluster\" AND NOT protoPayload.authenticationInfo.principalEmail:system"
+  F="csv[no-heading,separator='  '](timestamp.date('%H:%M:%S'),protoPayload.authenticationInfo.principalEmail,protoPayload.methodName,protoPayload.resourceName)"
+  echo "== Qui a supprimé quoi, dans le namespace boutique ?"
+  gcloud logging read "$L AND protoPayload.methodName:delete AND protoPayload.resourceName:namespaces/boutique" --freshness=4h --limit=6 --format="$F" | cut -c1-150
   echo "== Les demandes refusées"
-  gcloud logging read "logName=\"projects/$P/logs/cloudaudit.googleapis.com%2Factivity\" AND resource.type=\"k8s_cluster\" AND protoPayload.status.code=7" --freshness=3h --limit=3 \
-    --format="table(timestamp.date('%H:%M:%S'),protoPayload.authenticationInfo.principalEmail,protoPayload.methodName,protoPayload.status.message.slice(0:90))"
+  gcloud logging read "$L AND protoPayload.status.code=7" --freshness=4h --limit=4 --format="$F" | cut -c1-150
   echo "== Le tableau de bord de sécurité du cluster"
   gcloud container clusters describe formation --region=europe-west1 --format="yaml(securityPostureConfig)"
   ;;
