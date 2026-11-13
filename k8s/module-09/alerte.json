@@ -1,0 +1,29 @@
+{
+  "displayName": "Boutique : un conteneur redémarre trop souvent",
+  "combiner": "OR",
+  "enabled": true,
+  "documentation": {
+    "content": "Un conteneur du namespace boutique a redémarré plus de 3 fois en 10 minutes. Commencez par : kubectl describe pod, puis kubectl logs --previous.",
+    "mimeType": "text/markdown"
+  },
+  "conditions": [
+    {
+      "displayName": "Plus de 3 redémarrages en 10 minutes",
+      "conditionThreshold": {
+        "filter": "resource.type = \"k8s_container\" AND resource.labels.namespace_name = \"boutique\" AND metric.type = \"kubernetes.io/container/restart_count\"",
+        "aggregations": [
+          {
+            "alignmentPeriod": "600s",
+            "perSeriesAligner": "ALIGN_DELTA"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 3,
+        "duration": "0s",
+        "trigger": {
+          "count": 1
+        }
+      }
+    }
+  ]
+}

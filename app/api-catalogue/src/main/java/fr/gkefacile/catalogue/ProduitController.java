@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ public class ProduitController {
     /** Ce qu'on envoie pour ajouter un produit. */
     public record NouveauProduit(String nom, String categorie, BigDecimal prix) {
     }
+
+    private static final Logger log = LoggerFactory.getLogger(ProduitController.class);
 
     private final ProduitRepository repository;
     private final String version;
@@ -50,6 +54,7 @@ public class ProduitController {
     @PostMapping("/produits")
     public ResponseEntity<Produit> ajouter(@RequestBody NouveauProduit nouveau) {
         Produit produit = repository.ajouter(nouveau.nom(), nouveau.categorie(), nouveau.prix());
+        log.info("Produit ajouté : {}", nouveau.nom());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header("X-Pod-Name", pod)
                 .body(produit);

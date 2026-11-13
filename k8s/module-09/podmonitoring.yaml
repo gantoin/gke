@@ -1,0 +1,14 @@
+# Leçon 9.4 : Prometheus managé vient lire les métriques de l'API toutes les 30 secondes
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: api-catalogue
+  namespace: boutique
+spec:
+  selector:
+    matchLabels:
+      app: api-catalogue
+  endpoints:
+    - port: 8080
+      path: /actuator/prometheus
+      interval: 30s
