@@ -1,0 +1,53 @@
+# Leçon 8.5 : la même API, répartie entre les zones, et qui s'arrête proprement
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-catalogue
+  namespace: boutique
+  labels:
+    app: api-catalogue
+spec:
+  # Pas de ligne "replicas" : c'est le HPA qui décide du nombre de pods
+  selector:
+    matchLabels:
+      app: api-catalogue
+  template:
+    metadata:
+      labels:
+        app: api-catalogue
+    spec:
+      terminationGracePeriodSeconds: 40
+      topologySpreadConstraints:              # répartir les pods entre les zones
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: api-catalogue
+      containers:
+        - name: api-catalogue
+          image: europe-west1-docker.pkg.dev/PROJECT_ID/formation-images/api-catalogue:v4
+          ports:
+            - containerPort: 8080
+          lifecycle:
+            preStop:                          # attendre 10 s avant de s'arrêter :
+              exec:                           # le temps que le pod sorte du service
+                command: ["sleep", "10"]
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 5

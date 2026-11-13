@@ -1,0 +1,29 @@
+# Leçon 8.2 : le nombre de pods de l'API suit la charge
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-catalogue
+  namespace: boutique
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-catalogue
+  minReplicas: 2                   # jamais moins
+  maxReplicas: 8                   # jamais plus
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60   # 60 % du CPU demandé (requests)
+  behavior:
+    scaleUp:                       # monter vite
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100               # au plus doubler...
+          periodSeconds: 30        # ...toutes les 30 secondes
+    scaleDown:                     # descendre lentement
+      stabilizationWindowSeconds: 120   # 2 minutes ici, pour le lab (5 minutes par défaut)

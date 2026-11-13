@@ -1,0 +1,41 @@
+# Leçon 8.2 : l'API catalogue, prête pour le HPA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-catalogue
+  namespace: boutique
+  labels:
+    app: api-catalogue
+spec:
+  # Pas de ligne "replicas" : c'est le HPA qui décide du nombre de pods
+  selector:
+    matchLabels:
+      app: api-catalogue
+  template:
+    metadata:
+      labels:
+        app: api-catalogue
+    spec:
+      containers:
+        - name: api-catalogue
+          image: europe-west1-docker.pkg.dev/PROJECT_ID/formation-images/api-catalogue:v4
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 5

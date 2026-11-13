@@ -1,0 +1,13 @@
+# Leçon 8.3 : un VPA qui observe et conseille, sans rien changer
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: api-catalogue
+  namespace: boutique
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-catalogue
+  updatePolicy:
+    updateMode: "Off"              # il recommande, il n'applique pas

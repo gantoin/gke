@@ -1,0 +1,11 @@
+# Leçon 8.5 : jamais plus d'un pod de l'API retiré à la fois
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-catalogue
+  namespace: boutique
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: api-catalogue
