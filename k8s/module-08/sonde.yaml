@@ -4,6 +4,10 @@ kind: Pod
 metadata:
   name: sonde
   namespace: boutique
+  annotations:
+    # Ce pod n'a pas de Deployment : si sa machine est retirée, il disparaît.
+    # Cette ligne interdit au cluster de retirer sa machine.
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
 spec:
   restartPolicy: Never
   terminationGracePeriodSeconds: 1
