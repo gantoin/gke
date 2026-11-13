@@ -115,8 +115,12 @@ menage)
   kubectl delete deployment api-catalogue -n boutique --ignore-not-found
   sed "s/PROJECT_ID/$P/" k8s/api-catalogue/deployment.yaml | kubectl apply -f -
   kubectl scale deployment api-catalogue -n boutique --replicas=0
-  echo "On attend la suppression du load balancer, puis on supprime la politique Cloud Armor..."
-  for i in $(seq 1 30); do gcloud compute security-policies delete boutique -q 2>/dev/null && echo "politique supprimée" && break; sleep 20; done
+  if [ -n "$(gcloud compute security-policies list --format='value(name)' --filter='name=boutique' 2>/dev/null)" ]; then
+    echo "On attend la suppression du load balancer, puis on supprime la politique Cloud Armor..."
+    for i in $(seq 1 30); do gcloud compute security-policies delete boutique -q 2>/dev/null && echo "politique supprimée" && break; sleep 20; done
+  fi
+  sleep 90
+  echo "== Ce qui reste (rien, normalement)"
   gcloud compute forwarding-rules list --format="value(name)"; gcloud compute security-policies list --format="value(name)"
   ;;
 *) echo "Usage : bash $0 durcir|rbac|images|reseau|armor|audit|verifier|menage" ;;
