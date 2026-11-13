@@ -41,7 +41,7 @@ rbac)
   ;;
 images)
   echo "== Les images de l'API, avec leur empreinte"
-  gcloud artifacts docker images list europe-west1-docker.pkg.dev/$P/formation-images/api-catalogue --include-tags --format="table(tags,version.slice(0:19),createTime.date('%Y-%m-%d'))" 2>/dev/null
+  gcloud artifacts docker images list europe-west1-docker.pkg.dev/$P/formation-images/api-catalogue --include-tags --format="table(tags,version,createTime.date('%Y-%m-%d'))" 2>/dev/null
   echo "== L'image utilisée par les pods"
   kubectl get pods -n boutique -l app=api-catalogue -o jsonpath='{.items[0].status.containerStatuses[0].imageID}{"\n"}'
   ;;
