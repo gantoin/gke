@@ -19,9 +19,10 @@ spec:
       terminationGracePeriodSeconds: 40
       topologySpreadConstraints:              # répartir les pods entre les zones
         - maxSkew: 1
-          minDomains: 3                       # on veut trois zones, même si le cluster n'a des machines que dans une
           topologyKey: topology.kubernetes.io/zone
-          whenUnsatisfiable: DoNotSchedule    # obligatoire : sinon ce n'est qu'un souhait
+          # Une préférence. Avec DoNotSchedule, la règle devient obligatoire :
+          # un pod reste en attente s'il manque une machine dans une zone.
+          whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
               app: api-catalogue
