@@ -7,6 +7,8 @@ kubectl delete networkpolicy postgres-seulement-api -n boutique --ignore-not-fou
 kubectl delete volumesnapshot --all -n boutique
 kubectl delete volumesnapshotclass photo-disque --ignore-not-found
 P=$(gcloud config get-value project 2>/dev/null)
+# On repart du Deployment du module 3 (sans les variables de la base)
+kubectl delete deployment api-catalogue -n boutique --ignore-not-found
 sed "s/PROJECT_ID/$P/" k8s/api-catalogue/deployment.yaml | kubectl apply -f -
 kubectl scale deployment api-catalogue -n boutique --replicas=0
 sleep 60
