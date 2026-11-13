@@ -9,6 +9,7 @@ Code source du cours Udemy « Maîtriser Google Kubernetes Engine (GKE) ».
 | `app/api-catalogue` | L'API catalogue du projet fil rouge : Spring Boot 3, Java 21, avec son Dockerfile |
 | `k8s/module-03` | Les manifestes des leçons du module 3 (pod, Deployment, Services) |
 | `k8s/api-catalogue` | Le déploiement complet de l'API catalogue (namespace, Deployment, Service) |
+| `k8s/module-04`, `k8s/module-05`, `k8s/module-06` | Les manifestes des modules 4 (clusters), 5 (réseau) et 6 (stockage, PostgreSQL) |
 | `scripts` | Des scripts de démonstration utilisés dans les leçons |
 
 ## Avant de commencer
@@ -58,3 +59,11 @@ gcloud artifacts repositories add-iam-policy-binding formation-images \
   --member="serviceAccount:$PN-compute@developer.gserviceaccount.com" \
   --role="roles/artifactregistry.reader"
 ```
+
+Construire la version v3 (module 6), qui sait ranger ses produits dans PostgreSQL :
+
+```
+docker build --build-arg APP_VERSION=v3 -t api-catalogue:v3 .
+```
+
+Par défaut, les produits restent en mémoire. Avec `SPRING_PROFILES_ACTIVE=postgres`, l'API utilise la base indiquée par `DB_HOST`, `DB_NAME`, `DB_USER` et `DB_PASSWORD`, et `POST /api/produits` ajoute un produit.
