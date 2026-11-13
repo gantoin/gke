@@ -2,6 +2,8 @@
 # Leçon 5.6 : un vrai nom de domaine et un certificat HTTPS
 # Usage : DOMAINE=gke.exemple.fr bash scripts/module-05-8-domaine-https.sh zone|site|menage
 # 1. "zone"   crée la zone Cloud DNS et affiche les serveurs de noms à déclarer chez votre vendeur de domaine
+#    (si votre vendeur refuse les enregistrements NS sur un sous-domaine, sautez cette étape :
+#     le script vous donnera l'adresse à mettre dans un enregistrement A chez lui)
 # 2. "site"   déploie l'Ingress, crée l'enregistrement, attend le certificat et teste en HTTPS
 # 3. "menage" supprime l'Ingress, le certificat et l'enregistrement
 set -u
@@ -24,9 +26,14 @@ site)
   for i in $(seq 1 90); do IP=$(kubectl get ingress boutique -n boutique -o jsonpath='{.status.loadBalancer.ingress[0].ip}'); [ -n "$IP" ] && break; sleep 10; done
   kubectl get ingress boutique -n boutique
   echo "== L'enregistrement DNS"
-  gcloud dns record-sets create $NOM. --zone=$ZONE --type=A --ttl=300 --rrdatas=$IP 2>&1 | tail -4
+  if gcloud dns managed-zones describe $ZONE >/dev/null 2>&1; then
+    gcloud dns record-sets create $NOM. --zone=$ZONE --type=A --ttl=300 --rrdatas=$IP 2>&1 | tail -4
+  else
+    echo "Pas de zone Cloud DNS pour $DOMAINE : créez chez votre vendeur de domaine un enregistrement A"
+    echo "  $NOM  ->  $IP"
+  fi
   echo "== On attend que le nom réponde sur Internet"
-  for i in $(seq 1 60); do [ "$(dig +short @8.8.8.8 $NOM)" = "$IP" ] && break; sleep 10; done
+  for i in $(seq 1 180); do [ "$(dig +short @8.8.8.8 $NOM)" = "$IP" ] && break; sleep 10; done
   dig +short @8.8.8.8 $NOM
   echo "== On attend le certificat (de 15 minutes à une heure)"
   S=$(date +%s)
@@ -44,9 +51,13 @@ menage)
   kubectl delete managedcertificate boutique -n boutique
   kubectl delete -f k8s/module-05/vitrine.yaml
   kubectl scale deployment api-catalogue -n boutique --replicas=0
-  gcloud dns record-sets delete $NOM. --zone=$ZONE --type=A 2>&1 | tail -1
-  echo "La zone $ZONE est conservée. Pour la supprimer : retirez d'abord les enregistrements NS chez votre vendeur de domaine,"
-  echo "puis : gcloud dns managed-zones delete $ZONE"
+  if gcloud dns managed-zones describe $ZONE >/dev/null 2>&1; then
+    gcloud dns record-sets delete $NOM. --zone=$ZONE --type=A 2>&1 | tail -1
+    echo "La zone $ZONE est conservée. Pour la supprimer : retirez d'abord les enregistrements NS chez votre vendeur de domaine,"
+    echo "puis : gcloud dns managed-zones delete $ZONE"
+  else
+    echo "Pensez à supprimer l'enregistrement A $NOM chez votre vendeur de domaine."
+  fi
   ;;
 *) echo "Usage : DOMAINE=gke.exemple.fr bash $0 zone|site|menage" ;;
 esac
