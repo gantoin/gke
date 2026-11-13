@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Module 8 : l'autoscaling, sous une vraie charge
-# Usage : bash scripts/module-08-autoscaling.sh hpa|resilience|menage
+# Usage : bash scripts/module-08-autoscaling.sh hpa|resilience|machines|menage
 # À lancer après : bash scripts/module-07-1-configmap.sh image   (l'image v4 de l'API)
 set -u
 P=$(gcloud config get-value project 2>/dev/null)
@@ -75,11 +75,27 @@ resilience)
   kubectl get hpa api-catalogue -n boutique
   kubectl get nodes --no-headers | wc -l
   ;;
+machines)
+  echo "== Avant"
+  kubectl get nodes
+  kubectl apply -f $K/gros-pods.yaml
+  for i in $(seq 1 24); do
+    echo "$(date +%H:%M:%S)  pods prêts: $(kubectl get pods -n boutique -l app=gros-pods --no-headers | grep -c 1/1)  en attente: $(kubectl get pods -n boutique -l app=gros-pods --no-headers | grep -c Pending)  machines: $(kubectl get nodes --no-headers | wc -l)"
+    [ "$(kubectl get deployment gros-pods -n boutique -o jsonpath='{.status.readyReplicas}')" = "4" ] && break
+    sleep 15
+  done
+  echo "== Pourquoi des machines sont arrivées"
+  kubectl get events -n boutique --field-selector reason=TriggeredScaleUp -o custom-columns='POD:.involvedObject.name,MESSAGE:.message' | tail -2 | cut -c1-220
+  kubectl get nodes
+  echo "== On supprime les gros pods : les machines repartent plus tard"
+  kubectl delete -f $K/gros-pods.yaml
+  for i in $(seq 1 30); do echo "$(date +%H:%M:%S)  machines: $(kubectl get nodes --no-headers | wc -l)"; sleep 30; done
+  ;;
 menage)
-  kubectl delete -f $K/charge.yaml -f $K/sonde.yaml -f $K/hpa.yaml -f $K/vpa.yaml -f $K/pdb.yaml --ignore-not-found
+  kubectl delete -f $K/gros-pods.yaml -f $K/charge.yaml -f $K/sonde.yaml -f $K/hpa.yaml -f $K/vpa.yaml -f $K/pdb.yaml --ignore-not-found
   kubectl delete deployment api-catalogue -n boutique --ignore-not-found
   sed "s/PROJECT_ID/$P/" k8s/api-catalogue/deployment.yaml | kubectl apply -f -
   kubectl scale deployment api-catalogue -n boutique --replicas=0
   ;;
-*) echo "Usage : bash $0 hpa|resilience|menage" ;;
+*) echo "Usage : bash $0 hpa|resilience|machines|menage" ;;
 esac
