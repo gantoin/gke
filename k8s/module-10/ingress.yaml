@@ -1,13 +1,4 @@
-# Leçon 10.5 : l'Ingress de la boutique, protégé par Cloud Armor
-apiVersion: cloud.google.com/v1
-kind: BackendConfig
-metadata:
-  name: boutique
-  namespace: boutique
-spec:
-  securityPolicy:
-    name: boutique                 # la politique Cloud Armor créée avec gcloud
----
+# Leçon 10.5 : la porte d'entrée de la boutique, depuis Internet
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

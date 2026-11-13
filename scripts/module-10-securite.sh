@@ -55,26 +55,35 @@ reseau)
   ;;
 armor)
   echo "== Une politique Cloud Armor : 30 demandes par minute et par adresse, pas plus"
-  gcloud compute security-policies create boutique --description="Protection de la boutique" 2>&1 | tail -1
-  gcloud compute security-policies rules create 1000 --security-policy=boutique --src-ip-ranges="*" \
-    --action=throttle --rate-limit-threshold-count=30 --rate-limit-threshold-interval-sec=60 \
-    --conform-action=allow --exceed-action=deny-429 --enforce-on-key=IP 2>&1 | tail -1
-  kubectl apply -f $K/cloud-armor.yaml
-  kubectl annotate service api-catalogue -n boutique cloud.google.com/backend-config='{"default":"boutique"}' --overwrite
+  # Sur un compte d'essai, le quota de politiques Cloud Armor est à zéro : la création est refusée.
+  if gcloud compute security-policies create boutique --description="Protection de la boutique"; then
+    ARMOR=oui
+    gcloud compute security-policies rules create 1000 --security-policy=boutique --src-ip-ranges="*" \
+      --action=throttle --rate-limit-threshold-count=30 --rate-limit-threshold-interval-sec=60 \
+      --conform-action=allow --exceed-action=deny-429 --enforce-on-key=IP
+    kubectl apply -f $K/backendconfig.yaml
+    kubectl annotate service api-catalogue -n boutique cloud.google.com/backend-config='{"default":"boutique"}' --overwrite
+  else
+    ARMOR=non
+    echo "Pas de Cloud Armor sur ce compte : on continue avec l'Ingress seul."
+  fi
+  kubectl apply -f $K/ingress.yaml
   echo "On attend le load balancer (jusqu'à 15 minutes)..."
   for i in $(seq 1 90); do
     IP=$(kubectl get ingress boutique -n boutique -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
     [ -n "$IP" ] && [ "$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://$IP/api/info)" = "200" ] && break
     sleep 10
   done
-  echo "$(date +%H:%M:%S)  le load balancer répond"
-  for i in $(seq 1 18); do
-    [ -n "$(gcloud compute backend-services list --format='value(securityPolicy)' 2>/dev/null | grep boutique)" ] && break; sleep 10
-  done
-  gcloud compute backend-services list --format="table(name.slice(0:40),securityPolicy.basename())"
-  sleep 75
-  echo "== 60 demandes d'affilée"
-  for i in $(seq 1 60); do curl -s -o /dev/null -m 5 -w '%{http_code}\n' http://$IP/api/info; done | sort | uniq -c
+  echo "$(date +%H:%M:%S)  réponse du load balancer, malgré les Network Policies : $(curl -s -o /dev/null -m 5 -w '%{http_code}' http://$IP/api/info)"
+  if [ $ARMOR = oui ]; then
+    for i in $(seq 1 18); do
+      [ -n "$(gcloud compute backend-services list --format='value(securityPolicy)' 2>/dev/null | grep boutique)" ] && break; sleep 10
+    done
+    gcloud compute backend-services list --format="table(name,securityPolicy.basename())"
+    sleep 75
+    echo "== 60 demandes d'affilée"
+    for i in $(seq 1 60); do curl -s -o /dev/null -m 5 -w '%{http_code}\n' http://$IP/api/info; done | sort | uniq -c
+  fi
   ;;
 audit)
   echo "== Qui a supprimé quoi, dans le cluster ?"

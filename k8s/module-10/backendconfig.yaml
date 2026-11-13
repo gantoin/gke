@@ -1,0 +1,9 @@
+# Leçon 10.5 : on branche la politique Cloud Armor sur le service de l'API
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: boutique
+  namespace: boutique
+spec:
+  securityPolicy:
+    name: boutique                 # la politique Cloud Armor créée avec gcloud
