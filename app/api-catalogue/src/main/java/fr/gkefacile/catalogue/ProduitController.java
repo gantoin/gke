@@ -24,10 +24,18 @@ public class ProduitController {
     private final ProduitRepository repository;
     private final String version;
     private final String pod;
+    // Deux réglages de démonstration (module 7) : ils viennent de la configuration, pas du code.
+    private final String message;
+    private final String devise;
 
-    public ProduitController(ProduitRepository repository, @Value("${APP_VERSION:v1}") String version) {
+    public ProduitController(ProduitRepository repository,
+            @Value("${APP_VERSION:v1}") String version,
+            @Value("${boutique.message:Bienvenue}") String message,
+            @Value("${boutique.devise:EUR}") String devise) {
         this.repository = repository;
         this.version = version;
+        this.message = message;
+        this.devise = devise;
         // Dans Kubernetes, HOSTNAME contient le nom du pod.
         this.pod = System.getenv().getOrDefault("HOSTNAME", "inconnu");
     }
@@ -53,6 +61,8 @@ public class ProduitController {
                 "application", "api-catalogue",
                 "version", version,
                 "stockage", repository.stockage(),
+                "message", message,
+                "devise", devise,
                 "pod", pod);
     }
 }

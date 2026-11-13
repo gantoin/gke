@@ -1,0 +1,14 @@
+# Leçon 7.5 : ce qui change pour l'environnement « prod »
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: boutique-prod
+resources:
+  - namespace.yaml
+  - ../../base
+replicas:
+  - name: api-catalogue
+    count: 3
+configMapGenerator:               # Kustomize crée le ConfigMap, avec un nom qui change quand son contenu change
+  - name: api-catalogue-config
+    literals:
+      - BOUTIQUE_MESSAGE=Bienvenue dans la boutique

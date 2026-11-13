@@ -19,7 +19,7 @@ Les manifestes contiennent le texte `PROJECT_ID` à la place de l'identifiant de
 ```
 git clone https://github.com/gantoin/gke.git
 cd gke
-sed -i "s/PROJECT_ID/$(gcloud config get-value project)/" k8s/*/*.yaml
+find k8s -name "*.yaml" -exec sed -i "s/PROJECT_ID/$(gcloud config get-value project)/" {} +
 ```
 
 Sur macOS, la commande `sed` s'écrit `sed -i ''` au lieu de `sed -i`.

@@ -1,0 +1,6 @@
+# Leçon 7.5 : ce qui est commun à tous les environnements
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deployment.yaml
+  - service.yaml

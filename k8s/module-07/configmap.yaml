@@ -1,0 +1,13 @@
+# Leçon 7.1 : la configuration de l'API, en dehors de l'image
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-catalogue-config
+  namespace: boutique
+data:
+  # Une valeur simple : elle deviendra une variable d'environnement
+  BOUTIQUE_MESSAGE: "Bienvenue dans la boutique"
+  # Un fichier entier : il sera posé dans le dossier /config du conteneur
+  application.properties: |
+    boutique.devise=EUR
+    logging.level.fr.gkefacile=INFO
