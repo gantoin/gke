@@ -1,0 +1,18 @@
+# Leçon 6.5 : un nouveau disque créé à partir de la photo
+# Il porte le nom que le StatefulSet attend : data-postgres-0
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-postgres-0
+  namespace: boutique
+spec:
+  storageClassName: premium-rwo
+  dataSource:
+    name: postgres-avant-accident
+    kind: VolumeSnapshot
+    apiGroup: snapshot.storage.k8s.io
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

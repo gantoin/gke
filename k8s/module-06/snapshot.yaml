@@ -1,0 +1,17 @@
+# Leçon 6.5 : une photo du disque de PostgreSQL
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: photo-disque
+driver: pd.csi.storage.gke.io
+deletionPolicy: Delete
+---
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: postgres-avant-accident
+  namespace: boutique
+spec:
+  volumeSnapshotClassName: photo-disque
+  source:
+    persistentVolumeClaimName: data-postgres-0

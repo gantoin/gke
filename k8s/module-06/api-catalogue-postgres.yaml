@@ -1,0 +1,72 @@
+# Leçon 6.3 : l'API catalogue branchée sur PostgreSQL (image v3)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-catalogue
+  namespace: boutique
+  labels:
+    app: api-catalogue
+    env: formation
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-catalogue
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: api-catalogue
+        env: formation
+    spec:
+      containers:
+        - name: api-catalogue
+          image: europe-west1-docker.pkg.dev/PROJECT_ID/formation-images/api-catalogue:v3
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE     # range les produits dans PostgreSQL
+              value: postgres
+            - name: DB_HOST                    # le nom fixe du pod de la base
+              value: postgres-0.postgres
+            - name: DB_NAME
+              value: boutique
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: utilisateur
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres
+                  key: mot-de-passe
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3

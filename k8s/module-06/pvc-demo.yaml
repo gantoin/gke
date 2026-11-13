@@ -1,0 +1,13 @@
+# Leçon 6.1 : une demande de stockage (PersistentVolumeClaim)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-donnees
+  namespace: boutique
+spec:
+  storageClassName: premium-rwo   # un disque SSD
+  accessModes:
+    - ReadWriteOnce               # monté en écriture par une seule machine à la fois
+  resources:
+    requests:
+      storage: 10Gi
