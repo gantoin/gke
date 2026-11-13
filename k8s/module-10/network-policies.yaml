@@ -1,0 +1,30 @@
+# Leçon 10.5 : dans boutique, tout est fermé, sauf ce qu'on ouvre
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tout-fermer
+  namespace: boutique
+spec:
+  podSelector: {}                  # tous les pods du namespace
+  policyTypes: ["Ingress"]         # aucune entrée autorisée
+---
+# L'API accepte : les pods de son namespace, et le load balancer de Google
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-catalogue
+  namespace: boutique
+spec:
+  podSelector:
+    matchLabels:
+      app: api-catalogue
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector: {}          # les pods du namespace boutique
+        - ipBlock:
+            cidr: 130.211.0.0/22   # les plages du load balancer Google
+        - ipBlock:
+            cidr: 35.191.0.0/16
+      ports:
+        - port: 8080

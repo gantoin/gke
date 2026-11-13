@@ -1,0 +1,46 @@
+# Leçon 10.2 : Léa, développeuse. Elle travaille dans boutique-dev, et elle peut seulement regarder boutique.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: boutique-dev
+---
+# Ce qu'une développeuse a le droit de faire dans SON namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developpeur
+  namespace: boutique-dev
+rules:
+  - apiGroups: ["", "apps"]
+    resources: ["pods", "pods/log", "services", "configmaps", "deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+# On donne ce rôle à Léa, dans boutique-dev
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lea-developpeur
+  namespace: boutique-dev
+subjects:
+  - kind: User
+    name: lea@example.com          # sur GKE : l'adresse du compte Google
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: developpeur
+  apiGroup: rbac.authorization.k8s.io
+---
+# En production (boutique) : lecture seule. "view" est un rôle fourni par Kubernetes, sans accès aux Secrets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lea-lecture
+  namespace: boutique
+subjects:
+  - kind: User
+    name: lea@example.com
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view
+  apiGroup: rbac.authorization.k8s.io

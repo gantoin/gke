@@ -1,0 +1,60 @@
+# Leçon 10.3 : l'API catalogue, durcie
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-catalogue
+  namespace: boutique
+  labels:
+    app: api-catalogue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-catalogue
+  template:
+    metadata:
+      labels:
+        app: api-catalogue
+    spec:
+      securityContext:                        # pour tout le pod
+        runAsNonRoot: true                    # refuser de démarrer en root
+        runAsUser: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api-catalogue
+          image: europe-west1-docker.pkg.dev/PROJECT_ID/formation-images/api-catalogue:v5
+          ports:
+            - containerPort: 8080
+          securityContext:                    # pour ce conteneur
+            allowPrivilegeEscalation: false   # impossible de gagner des droits
+            readOnlyRootFilesystem: true      # impossible d'écrire dans l'image
+            capabilities:
+              drop: ["ALL"]                   # aucun privilège Linux
+          env:
+            - name: LOGGING_STRUCTURED_FORMAT_CONSOLE
+              value: logstash
+          volumeMounts:
+            - name: tmp                       # le seul dossier où l'application peut écrire
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 5
+      volumes:
+        - name: tmp
+          emptyDir: {}
