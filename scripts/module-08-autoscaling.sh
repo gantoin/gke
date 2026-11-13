@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Module 8 : l'autoscaling, sous une vraie charge
-# Usage : bash scripts/module-08-autoscaling.sh hpa|resilience|machines|menage
+# Usage : bash scripts/module-08-autoscaling.sh hpa|resilience|zones|machines|menage
 # À lancer après : bash scripts/module-07-1-configmap.sh image   (l'image v4 de l'API)
 set -u
 P=$(gcloud config get-value project 2>/dev/null)
@@ -75,6 +75,22 @@ resilience)
   kubectl get hpa api-catalogue -n boutique
   kubectl get nodes --no-headers | wc -l
   ;;
+zones)
+  # Trois pods au minimum, et on regarde dans quelles zones ils sont placés
+  sed "s/PROJECT_ID/$P/" $K/api-catalogue-resilient.yaml | kubectl apply -f -
+  kubectl apply -f $K/pdb.yaml -f $K/hpa.yaml
+  kubectl patch hpa api-catalogue -n boutique --type merge -p '{"spec":{"minReplicas":3}}'
+  for i in $(seq 1 40); do
+    echo "$(date +%H:%M:%S)  prêts: $(kubectl get pods -n boutique -l app=api-catalogue --no-headers | grep -c 1/1)  en attente: $(kubectl get pods -n boutique -l app=api-catalogue --no-headers | grep -c Pending)  machines: $(kubectl get nodes --no-headers | wc -l)"
+    [ "$(kubectl get deployment api-catalogue -n boutique -o jsonpath='{.status.updatedReplicas}')" = "3" ] && [ "$(kubectl get deployment api-catalogue -n boutique -o jsonpath='{.status.readyReplicas}')" = "3" ] && [ "$(kubectl get pods -n boutique -l app=api-catalogue --no-headers | wc -l)" = "3" ] && break
+    sleep 15
+  done
+  echo "== Les pods, par zone"
+  zones
+  kubectl get nodes -o custom-columns='MACHINE:.metadata.name,ZONE:.metadata.labels.topology\.kubernetes\.io/zone,CPU:.status.capacity.cpu'
+  kubectl get pods -n boutique -l app=api-catalogue
+  kubectl describe pod -n boutique -l app=api-catalogue | grep -E "FailedScheduling|TriggeredScaleUp|NotTriggerScaleUp" | tail -4 | cut -c1-260
+  ;;
 machines)
   echo "== Avant"
   kubectl get nodes
@@ -97,5 +113,5 @@ menage)
   sed "s/PROJECT_ID/$P/" k8s/api-catalogue/deployment.yaml | kubectl apply -f -
   kubectl scale deployment api-catalogue -n boutique --replicas=0
   ;;
-*) echo "Usage : bash $0 hpa|resilience|machines|menage" ;;
+*) echo "Usage : bash $0 hpa|resilience|zones|machines|menage" ;;
 esac
