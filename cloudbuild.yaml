@@ -1,0 +1,28 @@
+# Leçon 11.2 : le pipeline Cloud Build de l'API catalogue
+# Trois étapes : construire l'image, la pousser, déployer sur le cluster.
+steps:
+  - id: construire
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "--build-arg", "APP_VERSION=${_VERSION}", "-t", "${_IMAGE}:${_VERSION}", "app/api-catalogue"]
+
+  - id: pousser
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "${_IMAGE}:${_VERSION}"]
+
+  - id: deployer
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gcloud container clusters get-credentials formation --region=europe-west1
+        kubectl set image deployment/api-catalogue api-catalogue=${_IMAGE}:${_VERSION} -n boutique
+        kubectl rollout status deployment/api-catalogue -n boutique --timeout=400s
+
+substitutions:
+  _VERSION: v6                     # à changer à chaque lancement : --substitutions=_VERSION=v7
+  _IMAGE: europe-west1-docker.pkg.dev/${PROJECT_ID}/formation-images/api-catalogue
+
+options:
+  dynamicSubstitutions: true
+  logging: CLOUD_LOGGING_ONLY      # obligatoire quand le build tourne avec son propre compte de service

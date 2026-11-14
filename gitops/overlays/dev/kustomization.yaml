@@ -1,0 +1,16 @@
+# L'environnement « dev » : pour le modifier, on modifie ce fichier dans Git. Rien d'autre.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: boutique-dev
+resources:
+  - ../../base
+replicas:
+  - name: api-catalogue
+    count: 1
+images:
+  - name: api-catalogue
+    newTag: v5                   # la version déployée en dev
+configMapGenerator:
+  - name: api-catalogue-config
+    literals:
+      - BOUTIQUE_MESSAGE=Boutique de test

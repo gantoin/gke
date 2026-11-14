@@ -1,0 +1,6 @@
+# Leçon 11.4 : la boutique, sous forme de chart Helm
+apiVersion: v2
+name: boutique
+description: L'API catalogue de la boutique
+version: 0.1.0          # la version du chart
+appVersion: "v5"        # la version de l'application

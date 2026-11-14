@@ -1,0 +1,49 @@
+# Leçon 11.3 : le même pipeline, avec GitHub Actions
+# Aucune clé dans le dépôt : GitHub prouve son identité à Google (Workload Identity Federation).
+# Deux secrets à créer dans le dépôt : GCP_PROJECT_ID et GCP_WIF_PROVIDER
+# (bash scripts/module-11-cicd.sh github affiche leurs valeurs).
+name: Déployer l'API sur GKE
+
+on:
+  workflow_dispatch:               # lancement à la main, depuis l'onglet Actions
+  push:
+    branches: [main]
+    paths: ["app/**"]              # et à chaque changement du code de l'API
+
+permissions:
+  contents: read
+  id-token: write                  # autorise GitHub à fournir une pièce d'identité au job
+
+env:
+  IMAGE: europe-west1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/formation-images/api-catalogue
+  VERSION: gh-${{ github.run_number }}
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Se présenter à Google, sans clé
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Construire et pousser l'image
+        run: |
+          gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+          docker build --build-arg APP_VERSION=$VERSION -t $IMAGE:$VERSION app/api-catalogue
+          docker push $IMAGE:$VERSION
+
+      - uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: formation
+          location: europe-west1
+
+      - name: Déployer
+        run: |
+          kubectl set image deployment/api-catalogue api-catalogue=$IMAGE:$VERSION -n boutique
+          kubectl rollout status deployment/api-catalogue -n boutique --timeout=400s

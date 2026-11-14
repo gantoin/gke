@@ -1,0 +1,49 @@
+# Leçons 11.5 et 11.6 : une Application Argo CD par environnement
+# DEPOT_GIT et PROJECT_ID sont remplacés par le script de la leçon.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: boutique-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/DEPOT_GIT        # la source de vérité
+    targetRevision: main
+    path: gitops/overlays/dev
+    kustomize:
+      images:
+        - api-catalogue=europe-west1-docker.pkg.dev/PROJECT_ID/formation-images/api-catalogue
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: boutique-dev
+  syncPolicy:
+    automated:
+      prune: true                  # ce qui disparaît de Git disparaît du cluster
+      selfHeal: true               # ce qui est modifié à la main est remis comme dans Git
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: boutique-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/DEPOT_GIT
+    targetRevision: main
+    path: gitops/overlays/prod
+    kustomize:
+      images:
+        - api-catalogue=europe-west1-docker.pkg.dev/PROJECT_ID/formation-images/api-catalogue
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: boutique-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

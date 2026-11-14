@@ -1,0 +1,16 @@
+# L'environnement « prod » : pour le modifier, on modifie ce fichier dans Git. Rien d'autre.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: boutique-prod
+resources:
+  - ../../base
+replicas:
+  - name: api-catalogue
+    count: 2
+images:
+  - name: api-catalogue
+    newTag: v4                   # la version déployée en prod
+configMapGenerator:
+  - name: api-catalogue-config
+    literals:
+      - BOUTIQUE_MESSAGE=Bienvenue dans la boutique

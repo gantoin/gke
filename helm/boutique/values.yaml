@@ -1,0 +1,11 @@
+# Leçon 11.4 : les valeurs par défaut. Chacune peut être changée à l'installation.
+replicas: 2
+message: "Bienvenue dans la boutique"
+
+image:
+  depot: europe-west1-docker.pkg.dev/PROJECT_ID/formation-images/api-catalogue
+  version: v5
+
+ressources:
+  cpu: 250m
+  memoire: 512Mi

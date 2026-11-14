@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-api-catalogue
+  labels:
+    app: {{ .Release.Name }}-api-catalogue
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-api-catalogue
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-api-catalogue
+    spec:
+      containers:
+        - name: api-catalogue
+          image: "{{ .Values.image.depot }}:{{ .Values.image.version }}"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: BOUTIQUE_MESSAGE
+              value: {{ .Values.message | quote }}
+          resources:
+            requests:
+              cpu: {{ .Values.ressources.cpu }}
+              memory: {{ .Values.ressources.memoire }}
+            limits:
+              cpu: "1"
+              memory: {{ .Values.ressources.memoire }}
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 5
