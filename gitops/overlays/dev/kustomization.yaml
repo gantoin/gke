@@ -7,9 +7,14 @@ resources:
 replicas:
   - name: api-catalogue
     count: 1
-images:
-  - name: api-catalogue
-    newTag: v5                   # la version déployée en dev
+patches:
+  - target:
+      kind: Deployment
+      name: api-catalogue
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: api-catalogue:v5      # la version déployée en dev
 configMapGenerator:
   - name: api-catalogue-config
     literals:
