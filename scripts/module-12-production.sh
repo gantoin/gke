@@ -56,10 +56,10 @@ inventaire)
   echo "-- Disques";             gcloud compute disks list --format="table(name,sizeGb,zone.basename())" 2>/dev/null | grep -v "^gke-.*-pvc-" | head -8
   echo "-- Adresses IP réservées"; gcloud compute addresses list --format="table(name,region.basename(),status)" 2>/dev/null
   echo "-- Load balancers";      gcloud compute forwarding-rules list --format="table(name,region.basename(),loadBalancingScheme)" 2>/dev/null
-  echo "-- Cloud SQL";           gcloud sql instances list --format="table(name,region,state)" 2>/dev/null
+  echo "-- Cloud SQL";           gcloud sql instances list --format="table(name,region,state)" 2>/dev/null </dev/null
   echo "-- Dépôts d'images";     gcloud artifacts repositories list --format="table(name.basename(),location,sizeBytes.size())" 2>/dev/null
   echo "-- Buckets";             gcloud storage buckets list --format="value(name)" 2>/dev/null
-  echo "-- Zones DNS";           gcloud dns managed-zones list --format="value(name)" 2>/dev/null
+  echo "-- Zones DNS";           gcloud dns managed-zones list --format="value(name)" 2>/dev/null </dev/null
   ;;
 menage)
   kubectl delete namespace equipe-dev --ignore-not-found --wait=false
