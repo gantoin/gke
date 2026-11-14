@@ -22,6 +22,9 @@ preparer)
   gcloud artifacts repositories add-iam-policy-binding formation-images --location=europe-west1 --member="serviceAccount:$SA" --role=roles/artifactregistry.writer --format="value(etag)" >/dev/null && echo "pousser des images : ok"
   gcloud projects add-iam-policy-binding $P --member="serviceAccount:$SA" --role=roles/container.developer --condition=None --format="value(etag)" >/dev/null && echo "déployer sur GKE : ok"
   gcloud projects add-iam-policy-binding $P --member="serviceAccount:$SA" --role=roles/logging.logWriter --condition=None --format="value(etag)" >/dev/null && echo "écrire ses logs : ok"
+  # Cloud Build range le code à construire dans un bucket : le compte de service doit pouvoir le lire
+  gcloud storage buckets describe gs://${P}_cloudbuild >/dev/null 2>&1 || gcloud storage buckets create gs://${P}_cloudbuild --location=europe-west1 -q 2>/dev/null
+  gcloud storage buckets add-iam-policy-binding gs://${P}_cloudbuild --member="serviceAccount:$SA" --role=roles/storage.objectViewer >/dev/null && echo "lire le code à construire : ok"
   echo "== Pour GitHub Actions : la confiance entre Google et le dépôt $DEPOT, sans clé"
   gcloud iam workload-identity-pools create github --location=global --display-name="GitHub Actions" 2>&1 | tail -1
   gcloud iam workload-identity-pools providers create-oidc depot --location=global --workload-identity-pool=github \
@@ -132,6 +135,7 @@ menage)
   gcloud projects remove-iam-policy-binding $P --member="serviceAccount:$SA" --role=roles/container.developer --condition=None --format="value(etag)" >/dev/null
   gcloud projects remove-iam-policy-binding $P --member="serviceAccount:$SA" --role=roles/logging.logWriter --condition=None --format="value(etag)" >/dev/null
   gcloud artifacts repositories remove-iam-policy-binding formation-images --location=europe-west1 --member="serviceAccount:$SA" --role=roles/artifactregistry.writer --format="value(etag)" >/dev/null
+  gcloud storage buckets remove-iam-policy-binding gs://${P}_cloudbuild --member="serviceAccount:$SA" --role=roles/storage.objectViewer >/dev/null
   gcloud iam service-accounts delete $SA -q
   ;;
 *) echo "Usage : bash $0 preparer|base|cloudbuild|github|version|helm|argocd|apps|etat|attendre|reparer|menage" ;;
