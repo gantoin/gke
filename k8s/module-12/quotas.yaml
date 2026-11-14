@@ -1,0 +1,27 @@
+# Leçon 12.3 : un namespace par équipe, avec un budget
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget-equipe
+  namespace: equipe-dev
+spec:
+  hard:
+    pods: "3"                      # pas plus de 3 pods
+    requests.cpu: "2"              # 2 CPU demandés, au total
+    requests.memory: 4Gi
+---
+# Les valeurs données aux conteneurs qui ne demandent rien
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: valeurs-par-defaut
+  namespace: equipe-dev
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 250m
+        memory: 256Mi
+      default:
+        cpu: 500m
+        memory: 256Mi
