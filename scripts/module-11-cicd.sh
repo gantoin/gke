@@ -125,6 +125,8 @@ reparer)
 menage)
   kubectl delete applications --all -n argocd --ignore-not-found
   kubectl delete namespace boutique-dev boutique-prod boutique-test argocd --ignore-not-found --wait=false
+  kubectl delete crd applications.argoproj.io applicationsets.argoproj.io appprojects.argoproj.io --ignore-not-found
+  kubectl delete clusterrole,clusterrolebinding -l app.kubernetes.io/part-of=argocd --ignore-not-found
   kubectl delete deployment api-catalogue -n boutique --ignore-not-found
   sed "s/PROJECT_ID/$P/" k8s/api-catalogue/deployment.yaml | kubectl apply -f -
   kubectl scale deployment api-catalogue -n boutique --replicas=0
