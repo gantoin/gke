@@ -42,11 +42,11 @@ quotas)
   kubectl create namespace equipe-dev 2>/dev/null
   kubectl apply -f k8s/module-12/quotas.yaml
   echo "== L'équipe demande 5 pods"
-  kubectl create deployment essai --image=nginx:1.27 --replicas=5 -n equipe-dev
+  kubectl apply -f k8s/module-12/essai.yaml
   sleep 20
   kubectl get deployment essai -n equipe-dev
   echo "== Pourquoi seulement 3 ?"
-  kubectl get events -n equipe-dev --field-selector reason=FailedCreate -o custom-columns='MESSAGE:.message' | tail -1 | fold -w 110
+  kubectl get events -n equipe-dev --field-selector reason=FailedCreate -o custom-columns='MESSAGE:.message' | tail -1 | fold -w 100
   echo "== Le budget, et ce qui est consommé"
   kubectl describe resourcequota budget-equipe -n equipe-dev | tail -5
   ;;
