@@ -14,7 +14,7 @@ patches:
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/image
-        value: api-catalogue:v4      # la version déployée en prod
+        value: api-catalogue:v5      # la version déployée en prod
 configMapGenerator:
   - name: api-catalogue-config
     literals:
