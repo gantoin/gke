@@ -47,7 +47,7 @@ cloudbuild)
   echo "== Les étapes du dernier build"
   B=$(gcloud builds list --limit=1 --format="value(id)")
   gcloud builds describe $B --format="table(steps.id,steps.status,steps.timing.startTime.date('%H:%M:%S'),steps.timing.endTime.date('%H:%M:%S'))"
-  gcloud builds list --limit=3 --format="table(id.slice(0:8),status,createTime.date('%H:%M:%S'),duration)"
+  gcloud builds list --limit=3 --format="table(id,status,createTime.date('%H:%M:%S'),duration)"
   echo "== La version en ligne"
   ouvrir api-catalogue boutique; curl -s localhost:8080/api/info; echo; pkill -f "port-forward service/api-catalogue"
   ;;
